@@ -12,6 +12,8 @@ struct OnboardingView: View {
     @AppStorage("onboarding") var onboardingIsActive: Bool = true
     @State private var buttonWidth: Double = UIScreen.main.bounds.width - 80
     @State private var buttonOffset: CGFloat = 0
+    @State private var isAnimating: Bool = false
+    @State private var imageOffset: CGSize =  CGSize(width: 0, height: 0)
     
     var body: some View {
         ZStack {
@@ -39,7 +41,9 @@ struct OnboardingView: View {
                     .padding(.horizontal, 10)
                     
                 } //: Header
-                
+                .opacity(isAnimating ? 1 : 0)
+                .offset(y: isAnimating ? 0 : -40 )
+                .animation(.easeOut(duration: 1), value: isAnimating)
                 // MARK: Center
                 
                 ZStack {
@@ -48,6 +52,8 @@ struct OnboardingView: View {
                     Image("character-1")
                         .resizable()
                         .scaledToFit()
+                        .opacity(isAnimating ? 1 : 0)
+                        .animation(.easeOut(duration: 0.5), value:  isAnimating)
                 } //: Center
                  
                 Spacer()
@@ -74,7 +80,7 @@ struct OnboardingView: View {
                     HStack {
                         Capsule()
                             .fill(Color("ColorRed"))
-                            .frame(width: 80)
+                            .frame(width: buttonOffset + 80)
                         Spacer()
                     }
                     //4. circle
@@ -96,12 +102,19 @@ struct OnboardingView: View {
                             DragGesture()
                                 .onChanged { gesture in
                                     if gesture.translation.width > 0 &&
-                                    buttonOffset <= buttonWidth - 80 {
+                                        buttonOffset <= buttonWidth - 80 {
                                         buttonOffset = gesture.translation.width
                                     }
                                 }
                                 .onEnded { _ in
-                                    buttonOffset = 0
+                                    withAnimation(Animation.easeOut(duration: 0.4)) {
+                                        if buttonOffset > buttonWidth / 2 {
+                                            buttonOffset = buttonWidth - 80
+                                            onboardingIsActive = false
+                                        } else {
+                                            buttonOffset = 0
+                                        }
+                                    }
                                 }
                         ) //: DragGesture
                         Spacer()
@@ -109,8 +122,14 @@ struct OnboardingView: View {
                 } //: Footer
                 .frame(width:buttonWidth, height: 80, alignment: .center)
                 .padding()
+                .opacity(isAnimating ?  1 : 0)
+                .offset(y: isAnimating ? 0 : 40)
+                .animation(.easeOut(duration: 1), value: isAnimating)
             }
             //            .border(.gray) //: VSTACK
+        }
+        .onAppear {
+             isAnimating = true
         }
         //        .border(.cyan) //: ZSTACK
     }
